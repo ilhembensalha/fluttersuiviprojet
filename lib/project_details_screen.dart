@@ -1,17 +1,24 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:suiviprojet/BacklogButton.dart';
 import 'package:suiviprojet/models/Project.dart';
 import 'package:suiviprojet/models/Tache.dart';
+import 'package:http/http.dart' as http;
 
 import 'SprintDetailsScreen.dart';
-import 'models/Sprint.dart';
 
-class ProjectDetailsScreen extends StatelessWidget {
+class ProjectDetailsScreen extends StatefulWidget {
   final Project project;
-  Sprint sprint  ;
-   ProjectDetailsScreen(this.project);
 
+  ProjectDetailsScreen(this.project);
 
+  @override
+  _ProjectDetailsScreenState createState() => _ProjectDetailsScreenState();
+}
+
+class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +42,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        project.name,
+                        widget.project.name,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 28,
@@ -49,7 +56,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                               color: Colors.white, size: 16),
                           SizedBox(width: 4),
                           Text(
-                            'Created on: ${project.createdAt}',
+                            'Created on: ${widget.project.createdAt}',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 14,
@@ -63,7 +70,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                           Icon(Icons.person, color: Colors.white, size: 16),
                           SizedBox(width: 4),
                           Text(
-                            'Users: ${project.members.map((user) => '${user.firstName} ${user.lastName}').join(", ")}',
+                            'Users: ${widget.project.members.map((user) => '${user.firstName} ${user.lastName}').join(", ")}',
                             style: TextStyle(
                               color: Color.fromARGB(255, 0, 0, 0),
                               fontSize: 14,
@@ -77,125 +84,198 @@ class ProjectDetailsScreen extends StatelessWidget {
               ],
             ),
           ),
-         
- Text(
-   
-  'BAcklog   :  ',
-  textAlign: TextAlign.start,
-  style: TextStyle(
-      color: Colors.grey[800],
-      fontWeight: FontWeight.bold,
-      fontSize: 20 ), 
-     ),
-           
-           /* child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                /* ListView.builder(
-                    itemCount: project.sprints.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      Sprint sprint = project.sprints[index];
-                      return ListTile(
-                        title: Text(sprint.nom),
-                        subtitle: Text(
-                            'Start: ${sprint.datedebut} - End: ${sprint.datefin}'),
-                        // Add more details as needed
-                      );
-                    },
-                  ),*/
-                 /* Text(
-                    'Description',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    project.description,
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                    
-                  Container(
-                    margin: const EdgeInsets.only(top: 50.0),
-                    child: BacklogButton(
-                      onPressed: () {
-                        // do something when button is pressed
-                      },
-                    ),
-                  )
-                ],
-              ),
-             
-                
+          Text(
+            'Backlog:',
+            style: TextStyle(
+              color: Colors.grey[800],
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
             ),
-            
-       
-*/
-
-*/
-
-
- Text(
-   
-  'les sprints   :  ',
-  textAlign: TextAlign.start,
-  style: TextStyle(
-      color: Colors.grey[800],
-      fontWeight: FontWeight.bold,
-      fontSize: 20 ), 
-     ),
-        
-               Expanded(
+          ),
+          Text(
+            'les sprints:',
+            style: TextStyle(
+              color: Colors.grey[800],
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          Expanded(
             child: ListView.builder(
-        itemCount: project.sprints.length,
-        itemBuilder: (context, index) {
-          final sprint = project.sprints[index];
-          return ListTile(
-            title: Text(sprint.nom),
-            subtitle: Text(sprint.description),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SprintDetailsScreen(sprint),
-                ),
+              itemCount: widget.project.sprints.length,
+              itemBuilder: (context, index) {
+                final sprint = widget.project.sprints[index];
+                return ListTile(
+                  title: Text(sprint.nom),
+                  subtitle: Text(sprint.description),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SprintDetailsScreen(sprint),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          Text(
+            'les tasks:',
+            style: TextStyle(
+              color: Colors.grey[800],
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: widget.project.tasks.length,
+              itemBuilder: (context, index) {
+                final task = widget.project.tasks[index];
+                return ListTile(
+                  title: Text(task.title),
+                  subtitle: Text(task.description),
+                  trailing:   SizedBox(
+                width: 100,
+                child: Row(
+                  children: [
+                    IconButton(
+  icon: const Icon(Icons.edit),
+  onPressed: () {
+    _editTask(task);
+  },
+),IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () {
+                      setState(() {
+                        widget.project.tasks.remove(task);
+                      });
+                      _saveProject();
+                    },
+                  ),
+        ]),),);
+              },
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () => _showForm(),
+      ),
+    );
+  }
+
+  void _showForm() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Create New Task'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(hintText: 'Title'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(hintText: 'Description'),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              String title = _titleController.text;
+              String description = _descriptionController.text;
+
+              Tache newTask = Tache(
+                id: 1, // Replace with the appropriate task ID
+                title: title,
+                description: description,
               );
+
+              setState(() {
+                widget.project.tasks.add(newTask);
+              });
+              _saveProject();
+
+              _titleController.text = '';
+              _descriptionController.text = '';
+
+              Navigator.pop(context);
             },
-          );
-        },
-      ),
-               ),
-                Text(
-   
-  'les tasks   :  ',
-  textAlign: TextAlign.start,
-  style: TextStyle(
-      color: Colors.grey[800],
-      fontWeight: FontWeight.bold,
-      fontSize: 20 ), 
-     ),
-                Expanded(
-            child: ListView.builder(
-        itemCount: project.tasks.length,
-        itemBuilder: (context, index) {
-          final task = project.tasks[index];
-          return ListTile(
-            title: Text(task.title),
-            subtitle: Text(task.description),
-            onTap: () {
-            
-            },
-          );
-        },
-      ),
-                ),
+            child: Text('Create'),
+          ),
         ],
       ),
     );
   }
+
+  Future<void> _saveProject() async {
+    String projectJson = jsonEncode(widget.project.toJson());
+
+    final putResponse = await http.put(
+      Uri.parse('http://localhost:3000/projects/${widget.project.id}'),
+      headers: {'Content-Type': 'application/json'},
+      body: projectJson,
+    );
+
+    if (putResponse.statusCode == 200) {
+      print('Project updated');
+    } else {
+      print('Failed to update project');
+    }
+  }
+  void _editTask(Tache task) {
+  _titleController.text = task.title;
+  _descriptionController.text = task.description;
+
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: Text('Edit Task'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(hintText: 'Title'),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _descriptionController,
+            decoration: const InputDecoration(hintText: 'Description'),
+          ),
+        ],
+      ),
+      actions: [
+        ElevatedButton(
+          onPressed: () {
+            String title = _titleController.text;
+            String description = _descriptionController.text;
+
+            setState(() {
+              task.title = title;
+              task.description = description;
+            });
+            _saveProject();
+
+            _titleController.text = '';
+            _descriptionController.text = '';
+
+            Navigator.pop(context);
+          },
+          child: Text('Update'),
+        ),
+      ],
+    ),
+  );
+}
+
 }

@@ -1,11 +1,13 @@
 import 'package:suiviprojet/models/Membre.dart';
 
 class Tache {
+  int id;
   Membre membre;
   String title;
   String description;
 
   Tache({
+    this.id,
     this.membre,
      this.title,
      this.description,
@@ -18,6 +20,7 @@ class Tache {
     }
 
     return Tache(
+      id: json['id'],
       membre: membre,
       title: json['title'],
       description: json['description'],
@@ -26,6 +29,7 @@ class Tache {
 
   Map<String, dynamic> toJson() {
     return {
+      'id':id,
       'membre': membre != null ? membre.toJson() : null,
       'title': title,
       'description': description,

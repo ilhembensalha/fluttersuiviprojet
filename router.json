@@ -1,0 +1,10 @@
+{
+  "/projects": "/projects",
+  "/projects/:projectId": "/projects/:projectId",
+  "/projects/:projectId/tasks": "/projects/:projectId/tasks",
+  "/projects/:projectId/tasks/:taskId": "/projects/:projectId/tasks/:taskId",
+  "/projects/:projectId/members": "/projects/:projectId/members",
+  "/projects/:projectId/members/:memberId": "/projects/:projectId/members/:memberId",
+  "/projects/:projectId/sprints": "/projects/:projectId/sprints",
+  "/projects/:projectId/sprints/:sprintId": "/projects/:projectId/sprints/:sprintId"
+}
