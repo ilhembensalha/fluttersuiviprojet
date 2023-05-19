@@ -5,20 +5,19 @@ import 'package:suiviprojet/models/Activity.dart';
 import 'package:suiviprojet/models/Project.dart';
 import 'package:suiviprojet/models/Tache.dart';
 import 'package:http/http.dart' as http;
-import 'package:suiviprojet/recentactivity.dart';
 
 import 'SprintDetailsScreen.dart';
 
-class ProjectDetailsScreen extends StatefulWidget {
+class activityScreen extends StatefulWidget {
   final Project project;
 
-  ProjectDetailsScreen(this.project);
+ activityScreen(this.project);
 
   @override
-  _ProjectDetailsScreenState createState() => _ProjectDetailsScreenState();
+  _activityScreenState createState() => _activityScreenState();
 }
 
-class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
+class _activityScreenState extends State<activityScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
@@ -86,16 +85,9 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
               ],
             ),
           ),
+        
           Text(
-            'Backlog:',
-            style: TextStyle(
-              color: Colors.grey[800],
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-          Text(
-            'les sprints:',
+            'les activity:',
             style: TextStyle(
               color: Colors.grey[800],
               fontWeight: FontWeight.bold,
@@ -104,55 +96,12 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: widget.project.sprints.length,
+              itemCount: widget.project.activitys.length,
               itemBuilder: (context, index) {
-                final sprint = widget.project.sprints[index];
+                final activity = widget.project.activitys[index];
                 return ListTile(
-                  title: Text(sprint.nom),
-                  subtitle: Text(sprint.description),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SprintDetailsScreen(sprint),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          Text(
-            'les tasks:',
-            style: TextStyle(
-              color: Colors.grey[800],
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
-          ),
-          IconButton(
-        iconSize: 50,
-        color: Colors.blue,
-        onPressed: () {
-         Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => activityScreen(widget.project),
-                      ),
-                    );
-        },
-        icon: Icon(
-          Icons.history,
-        ),
-      ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: widget.project.tasks.length,
-              itemBuilder: (context, index) {
-                final task = widget.project.tasks[index];
-                return ListTile(
-                  title: Text(task.title),
-                  subtitle: Text(task.description),
+                  title: Text(activity.title),
+                  subtitle: Text(activity.description),
                   trailing:   SizedBox(
                 width: 100,
                 child: Row(
@@ -160,13 +109,13 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
                     IconButton(
   icon: const Icon(Icons.edit),
   onPressed: () {
-    _editTask(task);
+    _editactivity(activity);
   },
 ),IconButton(
                     icon: const Icon(Icons.delete),
                     onPressed: () {
                       setState(() {
-                        widget.project.tasks.remove(task);
+                        widget.project.activitys.remove(activity);
                       });
                       _saveProject();
                     },
@@ -177,66 +126,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () => _showForm(),
-      ),
+     
     );
   }
 
-  void _showForm() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Create New Task'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(hintText: 'Title'),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(hintText: 'Description'),
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              String title = _titleController.text;
-              String description = _descriptionController.text;
-
-              Tache newTask = Tache(
-                id: 1, // Replace with the appropriate task ID
-                title: title,
-                description: description,
-              );
-             Activity newActivity= Activity(
-                id: 1, // Replace with the appropriate task ID
-                title: title,
-                description: description,
-              );
-              setState(() {
-                widget.project.tasks.add(newTask);
-                widget.project.activitys.add(newActivity);
-              });
-              _saveProject();
-
-              _titleController.text = '';
-              _descriptionController.text = '';
-
-              Navigator.pop(context);
-            },
-            child: Text('Create'),
-          ),
-        ],
-      ),
-    );
-  }
+ 
 
   Future<void> _saveProject() async {
     String projectJson = jsonEncode(widget.project.toJson());
@@ -253,14 +147,14 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
       print('Failed to update project');
     }
   }
-  void _editTask(Tache task) {
-  _titleController.text = task.title;
-  _descriptionController.text = task.description;
+  void _editactivity(Activity activity) {
+  _titleController.text = activity.title;
+  _descriptionController.text = activity.description;
 
   showDialog(
     context: context,
     builder: (_) => AlertDialog(
-      title: Text('Edit Task'),
+      title: Text('Edit activity'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,17 +175,11 @@ class _ProjectDetailsScreenState extends State<ProjectDetailsScreen> {
           onPressed: () {
             String title = _titleController.text;
             String description = _descriptionController.text;
-             Activity newActivity = Activity(
-                id: 1, // Replace with the appropriate task ID
-                title: title,
-                description: description,
-              );
- 
+
             setState(() {
-              task.title = title;
-              task.description = description;
+              activity.title = title;
+              activity.description = description;
             });
-             widget.project.activitys.add(newActivity);
             _saveProject();
 
             _titleController.text = '';
